@@ -108,13 +108,13 @@ void process(file_t *f)
 	}
 	printf("Last identifier/keyword: %s\n", token);
 	printf("Last preprocessor directive: %s\n", preproc);
-	printf("Total lines: %d\n"
-		"Total chars: %d\n"
+	printf("Total code lines: %d\n"
+		"Total code chars: %d\n"
 		"Total identifiers: %d\n"
 		"Total keywords: %d\n"
 		"Total preprocessors: %d\n"
 		"Total comments: %d\n",
-		l, nc, ni, nk, np, ncomm);
+		l, nc, (nk > 0 ? ni-nk : ni), nk, np, ncomm);
 }
 /* Program for testing tokenising functions.
  */
