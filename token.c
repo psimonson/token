@@ -14,7 +14,7 @@
 #include "file.h"
 
 /* some enumerations */
-enum { IDENT, PREPROC, COMMENT };
+enum { IDENT, PREPROC, COMMENT, STRING };
 
 /* static variables to hold token and preprocessor info */
 static char token[128];
@@ -49,14 +49,18 @@ int gettoken(file_t *f)
 		c = getc_file(f);
 		if(c != '*')
 			ungetc_file(f, c);
-		else {
-			while(isprint(getc_file(f)));
+		else
 			return COMMENT;
-		}
 	} else if(c == '*') { /* ending comment */
 		c = getc_file(f);
 		if(c != '/')
 			ungetc_file(f, c);
+	} else if(c == '\"') { /* string */
+		c = getc_file(f);
+		if(c == '\"')
+			ungetc_file(f, c);
+		else
+			return STRING;
 	} else if(isalpha(c)) { /* identifier */
 		ungetc_file(f, c);
 		pos = 0;
@@ -78,10 +82,11 @@ void process(file_t *f)
 				  "float", "double", "return", "unsigned",
 				  "signed", "const", "goto", "break", "if",
 				  "switch", "continue", "else", "while",
-				  "for", "case", "auto", "register", NULL};
+				  "for", "case", "auto", "register", "static",
+				  NULL};
 	const char **keyword;
-	int t, l, ni, nc, np, nk, ncomm;
-	l = ni = nc = np = nk = ncomm = 0;
+	int t, l, ni, nc, np, nk, ns, ncomm;
+	l = ni = nc = np = nk = ns = ncomm = 0;
 	while((t = gettoken(f)) != EOF) {
 		switch(t) {
 		case '\n':
@@ -111,6 +116,9 @@ void process(file_t *f)
 				}
 			}
 		break;
+		case STRING:
+			ns++;
+		break;
 		default:
 			nc++;
 		break;
@@ -122,9 +130,10 @@ void process(file_t *f)
 		"Total code chars: %d\n"
 		"Total identifiers: %d\n"
 		"Total keywords: %d\n"
+		"Total strings: %d\n"
 		"Total preprocessors: %d\n"
 		"Total comments: %d\n",
-		l, nc, (nk > 0 ? ni-nk : ni), nk, np, ncomm);
+		l, nc, (nk > 0 ? ni-nk : ni), nk, ns, np, ncomm);
 }
 /* Program for testing tokenising functions.
  */
