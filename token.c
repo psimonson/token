@@ -55,6 +55,16 @@ int gettoken(file_t *f)
 		c = getc_file(f);
 		if(c != '/')
 			ungetc_file(f, c);
+	} else if(c == '\\') { /* escape characters */
+		c = getc_file(f);
+		switch(c) {
+		case '\"':
+			c = getc_file(f);
+		break;
+		default:
+			ungetc_file(f, c);
+		break;
+		}
 	} else if(c == '\"') { /* string */
 		c = getc_file(f);
 		if(c == '\"')
