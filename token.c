@@ -1,3 +1,13 @@
+/**
+ * @file token.c
+ * @author Philip R. Simonson
+ * @date 12/26/2019
+ * @brief Process C source file into identifiers and preprocessor directives.
+ *****************************************************************************
+ * @details Just a simple C source file processing program, to display some
+ * information about your C sources. No bugs yet, that I've found anyways.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -23,7 +33,7 @@ int gettoken(file_t *f)
 	c = getc_file(f);
 	if(c == '\n' || c == '\r')
 		return c;
-	if(c == '#') {
+	if(c == '#') { /* preprocessor directive */
 		c = getc_file(f);
 		if(isalpha(c)) {
 			ungetc_file(f, c);
@@ -35,7 +45,7 @@ int gettoken(file_t *f)
 		} else {
 			ungetc_file(f, c);
 		}
-	} else if(c == '/') {
+	} else if(c == '/') { /* beginning comment */
 		c = getc_file(f);
 		if(c != '*')
 			ungetc_file(f, c);
@@ -43,11 +53,11 @@ int gettoken(file_t *f)
 			while(isprint(getc_file(f)));
 			return COMMENT;
 		}
-	} else if(c == '*') {
+	} else if(c == '*') { /* ending comment */
 		c = getc_file(f);
 		if(c != '/')
 			ungetc_file(f, c);
-	} else if(isalpha(c)) {
+	} else if(isalpha(c)) { /* identifier */
 		ungetc_file(f, c);
 		pos = 0;
 		while(isalnum(c = getc_file(f)))
