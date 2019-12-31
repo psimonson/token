@@ -5,7 +5,8 @@
  * @brief Process C source file into identifiers and preprocessor directives.
  *****************************************************************************
  * @details Just a simple C source file processing program, to display some
- * information about your C sources. No bugs yet, that I've found anyways.
+ * information about your C sources. Now there are a few bugs when I added
+ * more code.
  */
 
 #include <stdio.h>
@@ -14,7 +15,7 @@
 #include "file.h"
 
 /* some enumerations */
-enum { UNCOMMENT, IDENT, PREPROC, COMMENT, STRING };
+enum { UNCOMMENT, IDENT, PREPROC, COMMENT, STRING, ESCAPES };
 
 /* static variables to hold token and preprocessor info */
 static char token[128];
@@ -45,18 +46,17 @@ long gettoken(file_t *f)
 				ungetc_file(f, c);
 			}
 		}
-	} else if(c == '#') { /* preprocessor directive */
+	} else if(!isalpha(c) && c == '#') { /* preprocessor directive */
 		c = getc_file(f);
 		if(isalpha(c)) {
 			pos = 0;
 			ungetc_file(f, c);
-			while(isalnum(c = getc_file(f)))
+			while(c != ' ' && isalpha(c = getc_file(f)))
 				preproc[pos++] = c;
 			preproc[pos] = '\0';
 			return PREPROC;
-		} else {
-			ungetc_file(f, c);
 		}
+		return PREPROC;
 	} else if(!comment && c == '/') { /* beginning comment */
 		c = getc_file(f);
 		if(c == '*') {
@@ -65,16 +65,15 @@ long gettoken(file_t *f)
 		} else {
 			ungetc_file(f, c);
 		}
-	} else if(c == '\\') { /* escape characters */
+	} else if(!isalpha(c) && c == '\\') { /* escape characters */
 		c = getc_file(f);
-		if(c != '\'' || c != '\"')
-			ungetc_file(f, c);
-	} else if(c == '\"') { /* string */
+		if(c == '\'' || c == '\"')
+			return ESCAPES;
+	} else if(!isalpha(c) && c == '\"') { /* string */
 		c = getc_file(f);
-		if(c == '\"')
-			ungetc_file(f, c);
-		else
-			return STRING;
+		while(c == '\"' && isprint(c = getc_file(f)));
+		ungetc_file(f, c);
+		return STRING;
 	} else if(isalpha(c)) { /* identifier */
 		pos = 0;
 		ungetc_file(f, c);
@@ -105,6 +104,9 @@ void process(file_t *f)
 		switch(t) {
 		case '\n':
 			nl++;
+#ifndef NDEBUG
+			putchar(t);
+#endif
 		break;
 		case IDENT:
 			for(keyword = &keywords[0];
@@ -119,6 +121,8 @@ void process(file_t *f)
 		break;
 		case COMMENT:
 			ncomm++;
+		break;
+		case ESCAPES:
 		break;
 		case PREPROC:
 			for(keyword = &pp_keywords[0];
