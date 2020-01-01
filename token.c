@@ -176,6 +176,6 @@ int main()
 		return 1;
 	process(f);
 	close_file(f);
-	putchar('\n');
+	printf("Last build: [%s:%s]\n", __DATE__, __TIME__);
 	return 0;
 }
