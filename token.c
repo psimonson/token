@@ -1,7 +1,7 @@
 /**
  * @file token.c
  * @author Philip R. Simonson
- * @date 12/26/2019
+ * @date 12/28/2019
  * @brief Process C source file into identifiers and preprocessor directives.
  *****************************************************************************
  * @details Just a simple C source file processing program, to display some
