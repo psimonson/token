@@ -55,8 +55,9 @@ long gettoken(file_t *f)
 				preproc[pos++] = c;
 			preproc[pos] = '\0';
 			return PREPROC;
+		} else {
+			ungetc_file(f, c);
 		}
-		return PREPROC;
 	} else if(!comment && c == '/') { /* beginning comment */
 		c = getc_file(f);
 		if(c == '*') {
@@ -90,13 +91,15 @@ void process(file_t *f)
 {
 	const char *pp_keywords[] = {"pragma", "include", "define",
 				     "ifdef", "if", "else", "endif",
-				     NULL};
+				     "ifndef", "elif", "undef", "error",
+				     "warning", NULL};
 	const char *keywords[] = {"int", "void", "char", "long", "short",
 				  "float", "double", "return", "unsigned",
 				  "signed", "const", "goto", "break", "if",
 				  "switch", "continue", "else", "while",
 				  "for", "case", "auto", "register", "static",
-				  "enum", "struct", "typedef", "union", NULL};
+				  "enum", "struct", "typedef", "union",
+				  "do", NULL};
 	const char **keyword;
 	int t, nl, ni, nc, np, nk, ns, nuncomm, ncomm;
 	nl = ni = nc = np = nk = ns = nuncomm = ncomm = 0;
