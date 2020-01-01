@@ -33,7 +33,7 @@ long gettoken(file_t *f)
 	int c;
 
 	c = getc_file(f);
-	if(c == '\n')
+	if(!isprint(c) && c == '\n')
 		return c;
 
 	if(comment) { /* ignore characters - comment */
@@ -41,12 +41,20 @@ long gettoken(file_t *f)
 			c = getc_file(f);
 			if(c == '/') {
 				comment = 0;
+				ungetc_file(f, c);
 				return UNCOMMENT;
 			} else {
-				ungetc_file(f, c);
+				printf("\nToken: %d\n\n", c);
+				if(c == '\n')
+					return c;
+				else
+					ungetc_file(f, c);
 			}
 		} else {
-			return UNKNOWN;
+			if(c == '\n')
+				return c;
+			return UNKNOWN; /* returns for comment ending
+					   newline */
 		}
 	} else if(!isalpha(c) && c == '#') { /* preprocessor directive */
 		c = getc_file(f);
@@ -70,20 +78,25 @@ long gettoken(file_t *f)
 		}
 	} else if(!isalpha(c) && c == '\\') { /* escape characters */
 		c = getc_file(f);
-		if(c == '\'' || c == '\"')
+		if(c == '\'' || c == '\"' || c == 'n' || c == 'r' || c == '\\')
 			return ESCAPES;
 	} else if(!isalpha(c) && c == '\"') { /* string */
 		c = getc_file(f);
 		if(c != '\"') {
 			return STRING;
+		} else {
+			ungetc_file(f, c);
 		}
 	} else if(isalpha(c)) { /* identifier */
 		pos = 0;
 		ungetc_file(f, c);
-		while(isalnum(c = getc_file(f)))
+		while(c != ' ' && isalnum(c = getc_file(f)))
 			token[pos++] = c;
 		token[pos] = '\0';
 		return IDENT;
+	} else { /* normal token */
+		if(c == EOF)
+			ungetc_file(f, c);
 	}
 	return c; /* code */
 }
