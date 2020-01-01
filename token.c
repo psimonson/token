@@ -15,7 +15,7 @@
 #include "file.h"
 
 /* some enumerations */
-enum { UNCOMMENT, IDENT, PREPROC, COMMENT, STRING, ESCAPES };
+enum { UNCOMMENT, IDENT, PREPROC, COMMENT, STRING, ESCAPES, UNKNOWN };
 
 /* static variables to hold token and preprocessor info */
 static char token[128];
@@ -45,6 +45,8 @@ long gettoken(file_t *f)
 			} else {
 				ungetc_file(f, c);
 			}
+		} else {
+			return UNKNOWN;
 		}
 	} else if(!isalpha(c) && c == '#') { /* preprocessor directive */
 		c = getc_file(f);
