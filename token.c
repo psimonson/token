@@ -33,7 +33,7 @@ long gettoken(file_t *f)
 	int c;
 
 	c = getc_file(f);
-	if(c == '\n' || c == '\r')
+	if(c == '\n')
 		return c;
 
 	if(comment) { /* ignore characters - comment */
@@ -165,14 +165,14 @@ void process(file_t *f)
 #endif
 	printf("Last identifier/keyword: %s\n", token);
 	printf("Last preprocessor directive: %s\n", preproc);
-	printf("Total code lines: %d/%d\n"
+	printf("Total code lines: %d\n"
 		"Total code chars: %d\n"
 		"Total identifiers: %d\n"
 		"Total keywords: %d\n"
 		"Total strings: %d\n"
 		"Total preprocessors: %d\n"
 		"Total comments: %d/%d\n",
-		nl-ncomm, nl, nc, (nk > 0 ? ni-nk : ni),
+		nl, nc, (nk > 0 ? ni-nk : ni),
 		nk, ns, np, nuncomm, ncomm);
 #undef NDEBUG
 }
