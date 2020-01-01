@@ -74,9 +74,9 @@ long gettoken(file_t *f)
 			return ESCAPES;
 	} else if(!isalpha(c) && c == '\"') { /* string */
 		c = getc_file(f);
-		while(c == '\"' && isprint(c = getc_file(f)));
-		ungetc_file(f, c);
-		return STRING;
+		if(c != '\"') {
+			return STRING;
+		}
 	} else if(isalpha(c)) { /* identifier */
 		pos = 0;
 		ungetc_file(f, c);
@@ -91,6 +91,7 @@ long gettoken(file_t *f)
  */
 void process(file_t *f)
 {
+#define NDEBUG 1 /* switch me to 0 to disable debugging */
 	const char *pp_keywords[] = {"pragma", "include", "define",
 				     "ifdef", "if", "else", "endif",
 				     "ifndef", "elif", "undef", "error",
@@ -109,7 +110,7 @@ void process(file_t *f)
 		switch(t) {
 		case '\n':
 			nl++;
-#ifndef NDEBUG
+#if NDEBUG
 			putchar(t);
 #endif
 		break;
@@ -119,6 +120,9 @@ void process(file_t *f)
 				keyword++) {
 				if(strcmp(*keyword, token) == 0) {
 					nk++;
+#if !NDEBUG
+					printf("Token: %s\n", token);
+#endif
 					break;
 				}
 			}
@@ -135,6 +139,9 @@ void process(file_t *f)
 				keyword++) {
 				if(strcmp(*keyword, preproc) == 0) {
 					np++;
+#if !NDEBUG
+					printf("Preproc: %s\n", preproc);
+#endif
 					break;
 				}
 			}
@@ -147,13 +154,13 @@ void process(file_t *f)
 		break;
 		default:
 			nc++;
-#ifndef NDEBUG
+#if NDEBUG
 			putchar(t);
 #endif
 		break;
 		}
 	}
-#ifndef NDEBUG
+#if NDEBUG
 	putchar('\n');
 #endif
 	printf("Last identifier/keyword: %s\n", token);
@@ -167,6 +174,7 @@ void process(file_t *f)
 		"Total comments: %d/%d\n",
 		nl-ncomm, nl, nc, (nk > 0 ? ni-nk : ni),
 		nk, ns, np, nuncomm, ncomm);
+#undef NDEBUG
 }
 /* Program for testing tokenising functions.
  */
