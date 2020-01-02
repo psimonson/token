@@ -44,7 +44,6 @@ long gettoken(file_t *f)
 				ungetc_file(f, c);
 				return UNCOMMENT;
 			} else {
-				printf("\nToken: %d\n\n", c);
 				if(c == '\n')
 					return c;
 				else
@@ -87,7 +86,7 @@ long gettoken(file_t *f)
 		} else {
 			ungetc_file(f, c);
 		}
-	} else if(isalpha(c)) { /* identifier */
+	} else if(c == '_' || isalpha(c)) { /* identifier */
 		pos = 0;
 		ungetc_file(f, c);
 		while(c != ' ' && isalnum(c = getc_file(f)))
