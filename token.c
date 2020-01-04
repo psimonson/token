@@ -22,9 +22,18 @@ static char token[128];
 static char preproc[128];
 static int pos;
 
+/* Check token to see if it's an escape character.
+ */
+int check_escape(int c)
+{
+	if(c == '\'' || c == '\"' || c == 'n' || c == 'r' || c == '\\'
+		|| c == 't' || c == 'v' || c == 'f')
+		return 1;
+	return 0;
+}
 /* Gets tokens from C source file.
  */
-long gettoken(file_t *f)
+int gettoken(file_t *f)
 {
 	extern char preproc[];
 	extern char token[];
@@ -41,15 +50,14 @@ long gettoken(file_t *f)
 			c = getc_file(f);
 			if(c == '/') {
 				comment = 0;
-				ungetc_file(f, c);
+				ungetc_file(f, c); /* do NOT remove */
 				return UNCOMMENT;
 			} else {
-				if(c == '\n')
-					return c;
-				else
-					ungetc_file(f, c);
+				ungetc_file(f, c); /* do NOT remove */
 			}
 		} else {
+			if(c == '\n')
+				return c;
 			return UNKNOWN; /* returns for comment ending
 					   newline */
 		}
@@ -75,7 +83,7 @@ long gettoken(file_t *f)
 		}
 	} else if(!isalpha(c) && c == '\\') { /* escape characters */
 		c = getc_file(f);
-		if(c == '\'' || c == '\"' || c == 'n' || c == 'r' || c == '\\')
+		if(check_escape(c)) /* check if c is equal to escape chars */
 			return ESCAPES;
 		else
 			ungetc_file(f, c);
@@ -83,8 +91,6 @@ long gettoken(file_t *f)
 		c = getc_file(f);
 		if(c != '\"') {
 			return STRING;
-		} else {
-			ungetc_file(f, c);
 		}
 	} else if(c == '_' || isalpha(c)) { /* identifier */
 		pos = 0;
@@ -94,7 +100,7 @@ long gettoken(file_t *f)
 		token[pos] = '\0';
 		return IDENT;
 	}
-	return c; /* code */
+	return c; /* other token */
 }
 /* Processes a file using gettokens function.
  */
