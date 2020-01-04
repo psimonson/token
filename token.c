@@ -50,8 +50,6 @@ long gettoken(file_t *f)
 					ungetc_file(f, c);
 			}
 		} else {
-			if(c == '\n')
-				return c;
 			return UNKNOWN; /* returns for comment ending
 					   newline */
 		}
@@ -79,6 +77,8 @@ long gettoken(file_t *f)
 		c = getc_file(f);
 		if(c == '\'' || c == '\"' || c == 'n' || c == 'r' || c == '\\')
 			return ESCAPES;
+		else
+			ungetc_file(f, c);
 	} else if(!isalpha(c) && c == '\"') { /* string */
 		c = getc_file(f);
 		if(c != '\"') {
@@ -93,9 +93,6 @@ long gettoken(file_t *f)
 			token[pos++] = c;
 		token[pos] = '\0';
 		return IDENT;
-	} else { /* normal token */
-		if(c == EOF)
-			ungetc_file(f, c);
 	}
 	return c; /* code */
 }
