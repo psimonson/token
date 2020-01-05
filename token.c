@@ -24,7 +24,7 @@ static int pos;
 
 /* Check token to see if it's an escape character.
  */
-int check_escape(int c)
+int isescape(int c)
 {
 	if(c == '\'' || c == '\"' || c == 'n' || c == 'r' || c == '\\'
 		|| c == 't' || c == 'v' || c == 'f')
@@ -41,8 +41,8 @@ int gettoken(file_t *f)
 	static char comment = 0;
 	int c;
 
+	c = getc_file(f);
 	if(comment) { /* ignore characters - comment */
-		c = getc_file(f);
 		if(c == '*') {
 			c = getc_file(f);
 			if(c == '/') {
@@ -54,11 +54,9 @@ int gettoken(file_t *f)
 			}
 		} else {
 			if(c == '\n') return c; /* do NOT remove */
-			return UNKNOWN;         /* do NOT remove */
 		}
 	}
-	c = getc_file(f);
-	if(!isalpha(c) && c == '#') { /* preprocessor directive */
+	if(!isalpha(c) && c == '#') { /* preprocessors */
 		c = getc_file(f);
 		if(isalpha(c)) {
 			pos = 0;
@@ -70,7 +68,7 @@ int gettoken(file_t *f)
 		} else {
 			ungetc_file(f, c);
 		}
-	} else if(!comment && c == '/') { /* beginning comment */
+	} else if(!comment && !isescape(c) && c == '/') { /* comment */
 		c = getc_file(f);
 		if(c == '*') {
 			comment = 1;
@@ -78,18 +76,17 @@ int gettoken(file_t *f)
 		} else {
 			ungetc_file(f, c);
 		}
-	} else if(!isalpha(c) && c == '\\') { /* escape characters */
+	} else if(!isalpha(c) && c == '\\') { /* escape chars */
 		c = getc_file(f);
-		if(check_escape(c)) /* check if c is equal to escape chars */
+		if(isescape(c)) /* check if c is equal to escape chars */
 			return ESCAPES;
 		else
 			ungetc_file(f, c);
 	} else if(!isalpha(c) && c == '\"') { /* string */
-		c = getc_file(f);
-		if(c != '\"') {
-			return STRING;
-		}
-	} else if(isalpha(c)) { /* identifier */
+		while(isprint(c = getc_file(f)) && c == '\"');
+		ungetc_file(f, c);
+		return STRING;
+	} else if(c == '_' || isalpha(c)) { /* identifier */
 		pos = 0;
 		ungetc_file(f, c);
 		while(isalnum(c = getc_file(f)) || c == '_')
@@ -115,10 +112,10 @@ void process(file_t *f)
 				  "switch", "continue", "else", "while",
 				  "for", "case", "auto", "register", "static",
 				  "enum", "struct", "typedef", "union",
-				  "do", NULL};
+				  "do", "extern", NULL};
 	const char **keyword;
-	int t, nl, ni, nc, np, nk, ns, nuncomm, ncomm;
-	nl = ni = nc = np = nk = ns = nuncomm = ncomm = 0;
+	int t, nl, ni, nc, np, ne, nk, ns, nuncomm, ncomm;
+	nl = ni = nc = np = nk = ne =  ns = nuncomm = ncomm = 0;
 	while((t = gettoken(f)) != EOF) {
 		switch(t) {
 		case '\n':
@@ -145,6 +142,7 @@ void process(file_t *f)
 			ncomm++;
 		break;
 		case ESCAPES:
+			ne++;
 		break;
 		case PREPROC:
 			for(keyword = &pp_keywords[0];
@@ -183,10 +181,11 @@ void process(file_t *f)
 		"Total identifiers: %d\n"
 		"Total keywords: %d\n"
 		"Total strings: %d\n"
+		"Total escape chars: %d\n"
 		"Total preprocessors: %d\n"
 		"Total comments: %d/%d\n",
 		nl, nc, (nk > 0 ? ni-nk : ni),
-		nk, ns, np, nuncomm, ncomm);
+		nk, ns, ne, np, nuncomm, ncomm);
 #undef NDEBUG
 }
 /* Program for testing tokenising functions.
