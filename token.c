@@ -47,7 +47,6 @@ int gettoken(file_t *f)
 			c = getc_file(f);
 			if(c == '/') {
 				comment = 0;
-				ungetc_file(f, c);
 				return UNCOMMENT;
 			} else {
 				ungetc_file(f, c);
