@@ -1,14 +1,15 @@
 CFLAGS=-std=c89 -Wall -Wextra $(shell pkg-config --cflags prs)
 LDFLAGS=$(shell pkg-config --libs prs)
+TARGET=token
 
 .PHONY: all clean
-all: token
+all: $(TARGET)
 
 %.c.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-token: token.c.o
+$(TARGET): main.c.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 clean:
-	rm -f *~ *.o token
+	rm -f *~ *.o $(TARGET)

@@ -178,10 +178,14 @@ void process(file_t *f)
 }
 /* Program for testing tokenising functions.
  */
-int main()
+int main(int argc, char **argv)
 {
 	file_t *f;
-	f = open_file("token.c", "rt");
+	if(argc != 2) {
+		fprintf(stderr, "Usage: %s <file.{c,h}>\n", *argv);
+		return 1;
+	}
+	f = open_file(*++argv, "rt");
 	if(get_error_file() != FILE_ERROR_OKAY)
 		return 1;
 	process(f);
