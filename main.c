@@ -53,7 +53,7 @@ int gettoken(file_t *f)
 			return ESCAPES;
 		else
 			ungetc_file(f, c);
-	} else if(c == '/') { /* comment */
+	} else if(!comment && c == '/') { /* comment */
 		c = getc_file(f);
 		if(c == '*') {
 			comment = 1;
