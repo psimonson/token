@@ -83,9 +83,14 @@ int gettoken(file_t *f)
 		else
 			ungetc_file(f, c);
 	} else if(!isalpha(c) && c == '\"') { /* string */
-		while(isprint(c = getc_file(f)) && c == '\"');
-		ungetc_file(f, c);
-		return STRING;
+		c = getc_file(f);
+		if(c != '\"') {
+			while(isprint(c = getc_file(f)) && c == '\"');
+			ungetc_file(f, c);
+			return STRING;
+		} else {
+			ungetc_file(f, c);
+		}
 	} else if(c == '_' || isalpha(c)) { /* identifier */
 		pos = 0;
 		ungetc_file(f, c);
@@ -101,7 +106,7 @@ int gettoken(file_t *f)
  */
 void process(file_t *f)
 {
-#define NDEBUG 1 /* switch me to 0 to disable debugging */
+#define NDEBUG 0 /* 0 = show tokens/processors, 1 = show other tokens */
 	const char *pp_keywords[] = {"pragma", "include", "define",
 				     "ifdef", "if", "else", "endif",
 				     "ifndef", "elif", "undef", "error",
