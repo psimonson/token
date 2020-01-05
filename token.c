@@ -14,13 +14,14 @@
 #include <ctype.h>
 #include "file.h"
 
+#define MAXTOKEN 128
+
 /* some enumerations */
 enum { UNCOMMENT, IDENT, PREPROC, COMMENT, STRING, ESCAPES, UNKNOWN };
 
 /* static variables to hold token and preprocessor info */
-static char token[128];
-static char preproc[128];
-static int pos;
+static char token[MAXTOKEN];
+static char preproc[MAXTOKEN];
 
 /* Check token to see if it's an escape character.
  */
@@ -37,39 +38,22 @@ int gettoken(file_t *f)
 {
 	extern char preproc[];
 	extern char token[];
-	extern int pos;
 	static char comment = 0;
-	int c;
+	int c, i;
 
-	if(comment) { /* ignore characters - comment */
+	while((c = getc_file(f)) == ' ' || c == '\t');
+	if(c == '#') { /* pre-processor directives */
+		for(i = 0; isalpha(c = getc_file(f)); i++)
+			preproc[i] = c;
+		preproc[i] = '\0';
+		return PREPROC;
+	} else if(c == '\\') { /* escape sequences */
 		c = getc_file(f);
-		if(c == '*') {
-			c = getc_file(f);
-			if(c == '/') {
-				comment = 0;
-				return UNCOMMENT;
-			} else {
-				ungetc_file(f, c);
-			}
-		} else {
-			if(c == '\n') return c; /* do NOT remove */
+		if(isescape(c))
+			return ESCAPES;
+		else
 			ungetc_file(f, c);
-		}
-	}
-	c = getc_file(f);
-	if(!isalpha(c) && c == '#') { /* preprocessors */
-		c = getc_file(f);
-		if(isalpha(c)) {
-			pos = 0;
-			ungetc_file(f, c);
-			while(c != ' ' && isalpha(c = getc_file(f)))
-				preproc[pos++] = c;
-			preproc[pos] = '\0';
-			return PREPROC;
-		} else {
-			ungetc_file(f, c);
-		}
-	} else if(!comment && !isescape(c) && c == '/') { /* comment */
+	} else if(c == '/') { /* comment */
 		c = getc_file(f);
 		if(c == '*') {
 			comment = 1;
@@ -77,28 +61,25 @@ int gettoken(file_t *f)
 		} else {
 			ungetc_file(f, c);
 		}
-	} else if(!isalpha(c) && c == '\\') { /* escape chars */
+	} else if(comment && c == '*') { /* inside comment */
 		c = getc_file(f);
-		if(isescape(c)) /* check if c is equal to escape chars */
-			return ESCAPES;
-		else
-			ungetc_file(f, c);
-	} else if(!isalpha(c) && c == '\"') { /* string */
-		c = getc_file(f);
-		if(c != '\"') {
-			while(isprint(c = getc_file(f)) && c == '\"');
-			ungetc_file(f, c);
-			return STRING;
+		if(c == '/') {
+			comment = 0;
+			return UNCOMMENT;
 		} else {
 			ungetc_file(f, c);
 		}
+	} else if(c == '\"') { /* string */
+		c = getc_file(f);
+		if(c != '\"')
+			return STRING;
+		else
+			ungetc_file(f, c);
 	} else if(c == '_' || isalpha(c)) { /* identifier */
-		pos = 0;
 		ungetc_file(f, c);
-		while(isalnum(c = getc_file(f)) || c == '_')
-			token[pos++] = c;
-		token[pos] = '\0';
-		ungetc_file(f, c);
+		for(i = 0; isalnum(c = getc_file(f)) || c == '_'; i++)
+			token[i] = c;
+		token[i] = '\0';
 		return IDENT;
 	}
 	return c; /* other token */
