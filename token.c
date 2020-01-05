@@ -41,21 +41,23 @@ int gettoken(file_t *f)
 	static char comment = 0;
 	int c;
 
-	c = getc_file(f);
 	if(comment) { /* ignore characters - comment */
+		c = getc_file(f);
 		if(c == '*') {
 			c = getc_file(f);
 			if(c == '/') {
 				comment = 0;
-	/* do NOT remove */	ungetc_file(f, c); /* do NOT remove */
+				ungetc_file(f, c);
 				return UNCOMMENT;
 			} else {
 				ungetc_file(f, c);
 			}
 		} else {
 			if(c == '\n') return c; /* do NOT remove */
+			ungetc_file(f, c);
 		}
 	}
+	c = getc_file(f);
 	if(!isalpha(c) && c == '#') { /* preprocessors */
 		c = getc_file(f);
 		if(isalpha(c)) {
