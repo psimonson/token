@@ -65,6 +65,7 @@ int gettoken(file_t *f)
 		c = getc_file(f);
 		if(c == '/') {
 			comment = 0;
+			ungetc_file(f, c);
 			return UNCOMMENT;
 		} else {
 			ungetc_file(f, c);
@@ -164,7 +165,7 @@ void process(file_t *f)
 #endif
 	printf("Last identifier/keyword: %s\n", token);
 	printf("Last preprocessor directive: %s\n", preproc);
-	printf("Total code lines: %d\n"
+	printf("Total lines: %d\n"
 		"Total code chars: %d\n"
 		"Total identifiers: %d\n"
 		"Total keywords: %d\n"
