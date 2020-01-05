@@ -41,27 +41,24 @@ int gettoken(file_t *f)
 	static char comment = 0;
 	int c;
 
-	c = getc_file(f);
-	if(!isprint(c) && c == '\n')
-		return c;
-
 	if(comment) { /* ignore characters - comment */
+		c = getc_file(f);
 		if(c == '*') {
 			c = getc_file(f);
 			if(c == '/') {
 				comment = 0;
-				ungetc_file(f, c); /* do NOT remove */
+	/* do NOT remove */	ungetc_file(f, c); /* do NOT remove */
 				return UNCOMMENT;
 			} else {
-				ungetc_file(f, c); /* do NOT remove */
+				ungetc_file(f, c);
 			}
 		} else {
-			if(c == '\n')
-				return c;
-			return UNKNOWN; /* returns for comment ending
-					   newline */
+			if(c == '\n') return c; /* do NOT remove */
+			return UNKNOWN;         /* do NOT remove */
 		}
-	} else if(!isalpha(c) && c == '#') { /* preprocessor directive */
+	}
+	c = getc_file(f);
+	if(!isalpha(c) && c == '#') { /* preprocessor directive */
 		c = getc_file(f);
 		if(isalpha(c)) {
 			pos = 0;
@@ -92,12 +89,13 @@ int gettoken(file_t *f)
 		if(c != '\"') {
 			return STRING;
 		}
-	} else if(c == '_' || isalpha(c)) { /* identifier */
+	} else if(isalpha(c)) { /* identifier */
 		pos = 0;
 		ungetc_file(f, c);
-		while(c != ' ' && isalnum(c = getc_file(f)))
+		while(isalnum(c = getc_file(f)) || c == '_')
 			token[pos++] = c;
 		token[pos] = '\0';
+		ungetc_file(f, c);
 		return IDENT;
 	}
 	return c; /* other token */
