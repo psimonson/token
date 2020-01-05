@@ -99,7 +99,8 @@ void process(file_t *f)
 				  "switch", "continue", "else", "while",
 				  "for", "case", "auto", "register", "static",
 				  "enum", "struct", "typedef", "union",
-				  "do", "extern", NULL};
+				  "do", "extern", "volatile", "default",
+				  "sizeof", NULL};
 	const char **keyword;
 	int t, nl, ni, nc, np, ne, nk, ns, nuncomm, ncomm;
 	nl = ni = nc = np = nk = ne =  ns = nuncomm = ncomm = 0;
