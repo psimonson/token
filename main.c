@@ -39,6 +39,7 @@ int gettoken(file_t *f)
 	extern char preproc[];
 	extern char token[];
 	static char comment = 0;
+	static char string = 0;
 	int c, i;
 
 	while((c = getc_file(f)) == ' ' || c == '\t');
@@ -67,15 +68,19 @@ int gettoken(file_t *f)
 			comment = 0;
 			ungetc_file(f, c);
 			return UNCOMMENT;
+		}
+	} else if(!string && c == '\"') { /* string */
+		c = getc_file(f);
+		if(c != '\"') {
+			string = 1;
 		} else {
 			ungetc_file(f, c);
 		}
-	} else if(c == '\"') { /* string */
-		c = getc_file(f);
-		if(c != '\"')
+	} else if(string) { /* inside string */
+		if(c == '\"') {
+			string = 0;
 			return STRING;
-		else
-			ungetc_file(f, c);
+		}
 	} else if(c == '_' || isalpha(c)) { /* identifier */
 		ungetc_file(f, c);
 		for(i = 0; isalnum(c = getc_file(f)) || c == '_'; i++)
@@ -103,8 +108,8 @@ void process(file_t *f)
 				  "do", "extern", "volatile", "default",
 				  "sizeof", NULL};
 	const char **keyword;
-	int t, nl, ni, nc, np, ne, nk, ns, nuncomm, ncomm;
-	nl = ni = nc = np = nk = ne =  ns = nuncomm = ncomm = 0;
+	int t, nl, ni, nch, nc, no, np, ne, nk, ns, nuncomm, ncomm;
+	nl = ni = nch = nc = no = np = nk = ne =  ns = nuncomm = ncomm = 0;
 	while((t = gettoken(f)) != EOF) {
 		switch(t) {
 		case '\n':
@@ -112,6 +117,12 @@ void process(file_t *f)
 #if NDEBUG
 			putchar(t);
 #endif
+		break;
+		case '{':
+			no++;
+		break;
+		case '}':
+			nc++;
 		break;
 		case IDENT:
 			for(keyword = &keywords[0];
@@ -153,7 +164,7 @@ void process(file_t *f)
 			nuncomm++;
 		break;
 		default:
-			nc++;
+			nch++;
 #if NDEBUG
 			putchar(t);
 #endif
@@ -165,16 +176,17 @@ void process(file_t *f)
 #endif
 	printf("Last identifier/keyword: %s\n", token);
 	printf("Last preprocessor directive: %s\n", preproc);
-	printf("Total lines: %d\n"
-		"Total code chars: %d\n"
+	printf("Total file lines: %d\n"
+		"Total other tokens: %d\n"
 		"Total identifiers: %d\n"
 		"Total keywords: %d\n"
 		"Total strings: %d\n"
+		"Total opening/closing braces: %d/%d\n"
 		"Total escape chars: %d\n"
 		"Total preprocessors: %d\n"
 		"Total comments: %d/%d\n",
-		nl, nc, (nk > 0 ? ni-nk : ni),
-		nk, ns, ne, np, nuncomm, ncomm);
+		nl, nch, (nk > 0 ? ni-nk : ni),
+		nk, ns, no, nc, ne, np, nuncomm, ncomm);
 #undef NDEBUG
 }
 /* Program for testing tokenising functions.
