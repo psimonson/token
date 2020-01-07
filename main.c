@@ -86,6 +86,9 @@ int gettoken(file_t *f)
 		for(i = 0; isalnum(c = getc_file(f)) || c == '_'; i++)
 			token[i] = c;
 		token[i] = '\0';
+		if(c != '\n') {
+			ungetc_file(f, c);
+		}
 		return IDENT;
 	}
 	return c; /* other token */
