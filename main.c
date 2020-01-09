@@ -197,13 +197,16 @@ void process(file_t *f)
 int main(int argc, char **argv)
 {
 	file_t *f;
+	int err;
 	if(argc != 2) {
 		fprintf(stderr, "Usage: %s <file.{c,h}>\n", *argv);
 		return 1;
 	}
 	f = open_file(argv[1], "rt");
-	if(get_error_file() != FILE_ERROR_OKAY)
+	if((err = get_error_file()) != FILE_ERROR_OKAY) {
+		fprintf(stderr, "Error: %s\n", strerror_file(err));
 		return 1;
+	}
 	process(f);
 	close_file(f);
 	printf("Last build: [%s:%s]\n", __DATE__, __TIME__);
