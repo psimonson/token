@@ -17,7 +17,7 @@
 #define MAXTOKEN 128
 
 /* some enumerations */
-enum { UNCOMMENT, IDENT, PREPROC, COMMENT, STRING, ESCAPES, UNKNOWN };
+enum { UNCOMMENT, IDENT, PREPROC, COMMENT, STRING, ESCAPES };
 
 /* static variables to hold token and preprocessor info */
 static char token[MAXTOKEN];
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Usage: %s <file.{c,h}>\n", *argv);
 		return 1;
 	}
-	f = open_file(*++argv, "rt");
+	f = open_file(argv[1], "rt");
 	if(get_error_file() != FILE_ERROR_OKAY)
 		return 1;
 	process(f);
